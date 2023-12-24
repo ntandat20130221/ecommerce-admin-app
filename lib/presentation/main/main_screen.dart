@@ -56,6 +56,7 @@ class _MainScreenState extends State<MainScreen> {
     return Scaffold(
       key: scaffoldKey,
       appBar: AppBar(
+        centerTitle: true,
         surfaceTintColor: Colors.transparent,
         title: Text(title),
         automaticallyImplyLeading: false,

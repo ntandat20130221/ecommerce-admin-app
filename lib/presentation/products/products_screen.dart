@@ -1,5 +1,6 @@
 import 'package:ecommerce_admin_app/data/repositories/product_repository_impl.dart';
 import 'package:ecommerce_admin_app/domain/product.dart';
+import 'package:ecommerce_admin_app/presentation/products/product_create.dart';
 import 'package:ecommerce_admin_app/shared/constants.dart';
 import 'package:flutter/material.dart';
 
@@ -49,10 +50,10 @@ class _ProductScreenState extends State<ProductScreen> {
                       Padding(
                         padding: const EdgeInsets.only(right: defaultPadding),
                         child: ElevatedButton.icon(
-                          style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: defaultPadding, vertical: 12)),
-                          onPressed: () {},
+                          style: ElevatedButton.styleFrom(backgroundColor: colorSecondary),
+                          onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => const ProductCreate())),
                           icon: const Icon(Icons.add),
-                          label: const Text('Add new'),
+                          label: const Text('Create'),
                         ),
                       ),
                     ],
@@ -64,7 +65,7 @@ class _ProductScreenState extends State<ProductScreen> {
                 itemBuilder: (context, index) {
                   final product = products[index];
                   return InkWell(
-                    onTap: () {},
+                    onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => const ProductCreate(isEdit: true))),
                     child: Row(
                       children: [
                         Padding(
