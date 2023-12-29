@@ -1,15 +1,15 @@
-import 'dart:convert';
 import 'dart:io';
 
+import 'package:ecommerce_admin_app/data/repositories/product_repository.dart';
+import 'package:ecommerce_admin_app/data/repositories/product_repository_impl.dart';
 import 'package:ecommerce_admin_app/domain/brand.dart';
+import 'package:ecommerce_admin_app/domain/product.dart';
 import 'package:ecommerce_admin_app/domain/type.dart';
+import 'package:ecommerce_admin_app/domain/size.dart';
 import 'package:ecommerce_admin_app/presentation/products/image_viewer.dart';
 import 'package:ecommerce_admin_app/shared/constants.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:http_parser/http_parser.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:intl/intl.dart';
 
 class ProductCreate extends StatefulWidget {
   const ProductCreate({super.key, this.isEdit = false});
@@ -21,27 +21,34 @@ class ProductCreate extends StatefulWidget {
 }
 
 class _ProductCreateState extends State<ProductCreate> {
+  final ProductRepository productRepository = ProductRepositoryImpl();
+
   final nameController = TextEditingController();
-  final sizeController = TextEditingController();
-  final quantityController = TextEditingController();
+
+  final List<Map<String, TextEditingController>> sizeQuantityControllers = [
+    {
+      'size': TextEditingController(),
+      'quantity': TextEditingController(),
+    }
+  ];
+
   final listedPriceController = TextEditingController();
   final promPriceController = TextEditingController();
 
   final brands = [
-    Brand(1, 'Nike'),
-    Brand(2, 'Adidas'),
-    Brand(3, 'Puma'),
+    Brand(id: 1, name: 'Nike'),
+    Brand(id: 2, name: 'Adidas'),
+    Brand(id: 3, name: 'Puma'),
   ];
 
   final types = [
-    Type(1, 'Áo đấu'),
-    Type(2, 'Áo huấn luyện'),
-    Type(3, 'Áo thủ môn'),
-    Type(4, 'Áo fan'),
+    Type(id: 1, name: 'Áo đấu'),
+    Type(id: 2, name: 'Áo huấn luyện'),
+    Type(id: 3, name: 'Áo thủ môn'),
+    Type(id: 4, name: 'Áo fan'),
   ];
 
-  final imageFiles = <File>[];
-  int sizeCount = 1;
+  final imagePaths = <String>[];
   int gender = 0;
 
   @override
@@ -57,42 +64,25 @@ class _ProductCreateState extends State<ProductCreate> {
         actions: [
           IconButton(
               onPressed: () async {
-                final request = http.MultipartRequest('POST', Uri.parse('http://10.0.2.2:8080/api/products'));
+                final product = Product(
+                  id: 0,
+                  name: nameController.text,
+                  gender: gender == 1,
+                  star: 0,
+                  brand: brands.firstWhere((brand) => brand.isSelected, orElse: () => brands.first),
+                  type: types.firstWhere((type) => type.isSelected, orElse: () => types.first),
+                  listedPrice: double.parse(listedPriceController.text),
+                  price: double.parse(promPriceController.text),
+                  sizes: sizeQuantityControllers
+                      .map((sizeQuantity) => Size(name: sizeQuantity['size']!.text, quantity: int.parse(sizeQuantity['quantity']!.text)))
+                      .toList(),
+                  images: imagePaths,
+                  timeCreated: DateTime.now(),
+                );
 
-                request.files.add(http.MultipartFile.fromString(
-                  'product',
-                  jsonEncode(
-                    {
-                      'nameProduct': nameController.text,
-                      'starReview': 0,
-                      'idStatusProduct': 1,
-                      'listedPrice': listedPriceController.text,
-                      'promotionalPrice': promPriceController.text,
-                      'brand': {
-                        'id': brands.firstWhere((brand) => brand.isSelected, orElse: () => brands.first).id,
-                      },
-                      'typeProduct': {
-                        'id': types.firstWhere((type) => type.isSelected, orElse: () => types.first).id,
-                      },
-                      'idSex': gender,
-                      'timeCreated': DateFormat('yyyy-MM-dd\'T\'HH:mm:ss').format(DateTime.now()),
-                      'imageProducts': [],
-                      'comments': [],
-                    },
-                  ),
-                  contentType: MediaType('application', 'json'),
-                ));
+                final isSuccessful = await productRepository.createProduct(product);
 
-                final mutipartFiles = <http.MultipartFile>[];
-                for (final file in imageFiles) {
-                  final mutipartFile = await http.MultipartFile.fromPath('images', file.path);
-                  mutipartFiles.add(mutipartFile);
-                }
-                request.files.addAll(mutipartFiles);
-
-                final response = await request.send();
-
-                if (response.statusCode == 200 && context.mounted) {
+                if (isSuccessful && context.mounted) {
                   Navigator.of(context).pop();
                 }
               },
@@ -158,12 +148,12 @@ class _ProductCreateState extends State<ProductCreate> {
             const SizedBox(height: defaultPadding),
             Column(
               children: [
-                for (int i = 0; i < sizeCount; i++)
+                for (final sizeQuantity in sizeQuantityControllers)
                   Column(
                     children: [
                       Row(children: [
-                        Expanded(child: field('Size', hint: 'Product size', controller: sizeController)),
-                        Expanded(child: field('Quantity', hint: 'Product quantity', controller: quantityController))
+                        Expanded(child: field('Size', hint: 'Product size', controller: sizeQuantity['size']!)),
+                        Expanded(child: field('Quantity', hint: 'Product quantity', controller: sizeQuantity['quantity']!))
                       ]),
                       const SizedBox(height: defaultPadding),
                     ],
@@ -174,12 +164,17 @@ class _ProductCreateState extends State<ProductCreate> {
                   children: [
                     CircleAvatar(
                       backgroundColor: colorSecondary,
-                      child: IconButton(onPressed: () => setState(() => sizeCount++), icon: const Icon(Icons.add)),
+                      child: IconButton(
+                          onPressed: () => setState(() => sizeQuantityControllers.add({
+                                'size': TextEditingController(),
+                                'quantity': TextEditingController(),
+                              })),
+                          icon: const Icon(Icons.add)),
                     ),
                     const SizedBox(width: defaultPadding),
                     CircleAvatar(
                       backgroundColor: colorSecondary,
-                      child: IconButton(onPressed: () => setState(() => sizeCount--), icon: const Icon(Icons.remove)),
+                      child: IconButton(onPressed: () => setState(() => sizeQuantityControllers.removeLast()), icon: const Icon(Icons.remove)),
                     ),
                   ],
                 )
@@ -241,20 +236,20 @@ class _ProductCreateState extends State<ProductCreate> {
         ),
         const SizedBox(height: defaultPadding),
         SizedBox(
-          height: imageFiles.isEmpty ? 0 : 100,
+          height: imagePaths.isEmpty ? 0 : 100,
           child: ListView.separated(
             padding: const EdgeInsets.symmetric(horizontal: defaultPadding),
             scrollDirection: Axis.horizontal,
             itemBuilder: (context, index) {
-              final imageFile = imageFiles[index];
+              final imagePath = imagePaths[index];
               return Stack(
                 alignment: AlignmentDirectional.topEnd,
                 children: [
                   GestureDetector(
-                    onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => ImageViewer(imageFile))),
+                    onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => ImageViewer(File(imagePath)))),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(6.0),
-                      child: Image.file(imageFile),
+                      child: Image.file(File(imagePath)),
                     ),
                   ),
                   Container(
@@ -263,7 +258,7 @@ class _ProductCreateState extends State<ProductCreate> {
                       style: ButtonStyle(backgroundColor: MaterialStateProperty.all<Color>(const Color.fromARGB(129, 37, 37, 37))),
                       onPressed: () {
                         setState(() {
-                          imageFiles.remove(imageFile);
+                          imagePaths.remove(imagePath);
                         });
                       },
                       icon: const Icon(Icons.close, color: Colors.white),
@@ -273,7 +268,7 @@ class _ProductCreateState extends State<ProductCreate> {
               );
             },
             separatorBuilder: (context, index) => const SizedBox(width: defaultPadding),
-            itemCount: imageFiles.length,
+            itemCount: imagePaths.length,
           ),
         ),
         Padding(
@@ -282,8 +277,8 @@ class _ProductCreateState extends State<ProductCreate> {
               onPressed: () {
                 final imagePicker = ImagePicker();
                 imagePicker.pickMultiImage().then((xFiles) {
-                  final imageFiles = xFiles.map((e) => File(e.path));
-                  setState(() => this.imageFiles.addAll(imageFiles));
+                  final paths = xFiles.map((e) => e.path);
+                  setState(() => imagePaths.addAll(paths));
                 });
               },
               style: ElevatedButton.styleFrom(backgroundColor: colorSecondary),

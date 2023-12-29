@@ -1,8 +1,70 @@
-class Product {
-  String? id, name, image, description, price;
-  List<String>? images;
-  List<String>? sizes;
-  String? categoryId;
+import 'package:ecommerce_admin_app/domain/brand.dart';
+import 'package:ecommerce_admin_app/domain/size.dart';
+import 'package:ecommerce_admin_app/domain/type.dart';
 
-  Product({this.id, this.name, this.description, this.price, this.images, this.sizes, this.categoryId});
+class Product {
+  Product({
+    required this.id,
+    required this.name,
+    required this.gender,
+    required this.star,
+    required this.brand,
+    required this.type,
+    required this.listedPrice,
+    required this.price,
+    required this.sizes,
+    required this.images,
+    required this.timeCreated,
+  });
+
+  int id;
+  String name;
+  bool gender;
+  int star;
+  Brand brand;
+  Type type;
+  double listedPrice, price;
+  List<Size> sizes;
+  List<String> images;
+  DateTime timeCreated;
+
+  Product.fromJson(Map<String, dynamic> json)
+      : id = json['id'],
+        name = json['name'],
+        gender = json['gender'],
+        star = json['star'],
+        brand = Brand.fromJson(json['brand']),
+        type = Type.fromJson(json['type']),
+        listedPrice = json['listedPrice'],
+        price = json['price'],
+        sizes = List<Size>.from(json['sizes'].map((sizeJson) => Size.fromJson(sizeJson))),
+        images = List<String>.from(json['images'] as List),
+        timeCreated = DateTime.parse(json['timeCreated']);
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'gender': gender,
+        'star': star,
+        'brand': {
+          'id': brand.id,
+          'nameBrand': brand.name,
+        },
+        'type': {
+          'id': type.id,
+          'nameType': type.name,
+        },
+        'listedPrice': listedPrice,
+        'price': price,
+        'sizes': [
+          ...sizes.map(
+            (size) => {
+              'name': size.name,
+              'quantity': size.quantity,
+            },
+          )
+        ],
+        'images': [...images],
+        'timeCreated': DateTime.now().toIso8601String()
+      };
 }

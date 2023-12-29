@@ -1,24 +1,42 @@
+import 'dart:convert';
+
+import 'package:ecommerce_admin_app/data/constants.dart';
 import 'package:ecommerce_admin_app/data/repositories/product_repository.dart';
 import 'package:ecommerce_admin_app/domain/product.dart';
+import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 
 class ProductRepositoryImpl implements ProductRepository {
   @override
   Future<List<Product>> getProducts() async {
-    await Future.delayed(const Duration(milliseconds: 0));
-    return [
-      Product(id: 'P01', name: 'Áo MU', description: 'Áo bóng đá MU', price: '50000VNĐ', images: ['assets/images/sample_product.jpeg'], sizes: ['M', 'L', 'XL', 'XXL']),
-      Product(id: 'P03', name: 'Áo MU', description: 'Áo bóng đá MU', price: '50000VNĐ', images: ['assets/images/sample_product.jpeg'], sizes: ['M', 'L', 'XL', 'XXL']),
-      Product(id: 'P04', name: 'Áo MU', description: 'Áo bóng đá MU', price: '50000VNĐ', images: ['assets/images/sample_product.jpeg'], sizes: ['M', 'L', 'XL', 'XXL']),
-      Product(id: 'P05', name: 'Áo MU', description: 'Áo bóng đá MU', price: '50000VNĐ', images: ['assets/images/sample_product.jpeg'], sizes: ['M', 'L', 'XL', 'XXL']),
-      Product(id: 'P06', name: 'Áo MU', description: 'Áo bóng đá MU', price: '50000VNĐ', images: ['assets/images/sample_product.jpeg'], sizes: ['M', 'L', 'XL', 'XXL']),
-      Product(id: 'P07', name: 'Áo MU', description: 'Áo bóng đá MU', price: '50000VNĐ', images: ['assets/images/sample_product.jpeg'], sizes: ['M', 'L', 'XL', 'XXL']),
-      Product(id: 'P08', name: 'Áo MU', description: 'Áo bóng đá MU', price: '50000VNĐ', images: ['assets/images/sample_product.jpeg'], sizes: ['M', 'L', 'XL', 'XXL']),
-      Product(id: 'P09', name: 'Áo MU', description: 'Áo bóng đá MU', price: '50000VNĐ', images: ['assets/images/sample_product.jpeg'], sizes: ['M', 'L', 'XL', 'XXL']),
-      Product(id: 'P10', name: 'Áo MU', description: 'Áo bóng đá MU', price: '50000VNĐ', images: ['assets/images/sample_product.jpeg'], sizes: ['M', 'L', 'XL', 'XXL']),
-      Product(id: 'P11', name: 'Áo MU', description: 'Áo bóng đá MU', price: '50000VNĐ', images: ['assets/images/sample_product.jpeg'], sizes: ['M', 'L', 'XL', 'XXL']),
-      Product(id: 'P12', name: 'Áo MU', description: 'Áo bóng đá MU', price: '50000VNĐ', images: ['assets/images/sample_product.jpeg'], sizes: ['M', 'L', 'XL', 'XXL']),
-      Product(id: 'P13', name: 'Áo MU', description: 'Áo bóng đá MU', price: '50000VNĐ', images: ['assets/images/sample_product.jpeg'], sizes: ['M', 'L', 'XL', 'XXL']),
-      Product(id: 'P14', name: 'Áo MU', description: 'Áo bóng đá MU', price: '50000VNĐ', images: ['assets/images/sample_product.jpeg'], sizes: ['M', 'L', 'XL', 'XXL']),
-    ];
+    final response = await http.get(Uri.parse('$baseUrl/api/admin/products'));
+    final products = <Product>[];
+    if (response.statusCode == 200) {
+      final productJsons = jsonDecode(utf8.decode(response.bodyBytes));
+      for (final productJson in productJsons) {
+        products.add(Product.fromJson(productJson));
+      }
+    }
+    return products;
+  }
+
+  @override
+  Future<bool> createProduct(Product product) async {
+    final request = http.MultipartRequest('POST', Uri.parse('$baseUrl/api/products'));
+    request.files.add(http.MultipartFile.fromString(
+      'product',
+      jsonEncode(product.toJson()),
+      contentType: MediaType('application', 'json'),
+    ));
+
+    final mutipartFiles = <http.MultipartFile>[];
+    for (final path in product.images) {
+      final mutipartFile = await http.MultipartFile.fromPath('images', path);
+      mutipartFiles.add(mutipartFile);
+    }
+    request.files.addAll(mutipartFiles);
+
+    final response = await request.send();
+    return response.statusCode == 200;
   }
 }
