@@ -148,6 +148,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                                     if (admin == null && context.mounted) {
                                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Email already exists.')));
+                                      return;
                                     }
 
                                     if (admin != null && context.mounted) {
