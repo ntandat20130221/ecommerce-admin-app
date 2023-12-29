@@ -1,3 +1,5 @@
+import 'package:ecommerce_admin_app/data/repositories/auth_repository.dart';
+import 'package:ecommerce_admin_app/data/repositories/auth_repository_impl.dart';
 import 'package:ecommerce_admin_app/shared/constants.dart';
 import 'package:flutter/material.dart';
 
@@ -9,6 +11,16 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
+  final AuthRepository authRepository = AuthRepositoryImpl();
+
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
+
+  bool passwordVisible = false;
+  bool confirmPasswordVisible = false;
+  bool isLoading = false;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -44,6 +56,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     child: Column(
                       children: [
                         TextFormField(
+                          controller: emailController,
                           style: TextStyle(color: Colors.grey[600]),
                           keyboardType: TextInputType.emailAddress,
                           decoration: InputDecoration(
@@ -64,8 +77,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         ),
                         const SizedBox(height: 25),
                         TextFormField(
+                          controller: passwordController,
                           style: TextStyle(color: Colors.grey[600]),
-                          keyboardType: TextInputType.emailAddress,
+                          keyboardType: TextInputType.text,
+                          obscureText: !passwordVisible,
                           decoration: InputDecoration(
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(defaultPadding / 2),
@@ -81,15 +96,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               color: Colors.grey[600],
                             ),
                             suffixIcon: IconButton(
-                              icon: Icon(Icons.visibility, color: Colors.grey[600]),
-                              onPressed: () => {},
+                              icon: Icon(passwordVisible ? Icons.visibility : Icons.visibility_off, color: Colors.grey[600]),
+                              onPressed: () => setState(() => passwordVisible = !passwordVisible),
                             ),
                           ),
                         ),
                         const SizedBox(height: 25),
                         TextFormField(
+                          controller: confirmPasswordController,
                           style: TextStyle(color: Colors.grey[600]),
-                          keyboardType: TextInputType.emailAddress,
+                          keyboardType: TextInputType.text,
+                          obscureText: !confirmPasswordVisible,
                           decoration: InputDecoration(
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(defaultPadding / 2),
@@ -105,26 +122,41 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               color: Colors.grey[600],
                             ),
                             suffixIcon: IconButton(
-                              icon: Icon(Icons.visibility, color: Colors.grey[600]),
-                              onPressed: () => {},
+                              icon: Icon(confirmPasswordVisible ? Icons.visibility : Icons.visibility_off, color: Colors.grey[600]),
+                              onPressed: () => setState(() => confirmPasswordVisible = !confirmPasswordVisible),
                             ),
                           ),
                         ),
                         const SizedBox(height: 40),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 55,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color.fromARGB(255, 14, 35, 221),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(defaultPadding / 2),
+                        isLoading
+                            ? const CircularProgressIndicator()
+                            : SizedBox(
+                                width: double.infinity,
+                                height: 55,
+                                child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color.fromARGB(255, 14, 35, 221),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(defaultPadding / 2),
+                                    ),
+                                  ),
+                                  child: const Text('SIGN UP', style: TextStyle(color: Colors.white, fontSize: 18)),
+                                  onPressed: () async {
+                                    setState(() => isLoading = true);
+                                    final admin = await authRepository.signUp(emailController.text, passwordController.text);
+                                    setState(() => isLoading = false);
+
+                                    if (admin == null && context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Email already exists.')));
+                                    }
+
+                                    if (admin != null && context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sign up successfully.')));
+                                      Navigator.of(context).pop();
+                                    }
+                                  },
+                                ),
                               ),
-                            ),
-                            child: const Text('SIGN UP', style: TextStyle(color: Colors.white, fontSize: 18)),
-                            onPressed: () {},
-                          ),
-                        ),
                         const SizedBox(height: 20),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
