@@ -1,9 +1,15 @@
+import 'dart:convert';
 import 'dart:io';
 
+import 'package:ecommerce_admin_app/domain/brand.dart';
+import 'package:ecommerce_admin_app/domain/type.dart';
 import 'package:ecommerce_admin_app/presentation/products/image_viewer.dart';
 import 'package:ecommerce_admin_app/shared/constants.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 
 class ProductCreate extends StatefulWidget {
   const ProductCreate({super.key, this.isEdit = false});
@@ -15,11 +21,28 @@ class ProductCreate extends StatefulWidget {
 }
 
 class _ProductCreateState extends State<ProductCreate> {
+  final nameController = TextEditingController();
+  final sizeController = TextEditingController();
+  final quantityController = TextEditingController();
+  final listedPriceController = TextEditingController();
+  final promPriceController = TextEditingController();
+
+  final brands = [
+    Brand(1, 'Nike'),
+    Brand(2, 'Adidas'),
+    Brand(3, 'Puma'),
+  ];
+
+  final types = [
+    Type(1, 'Áo đấu'),
+    Type(2, 'Áo huấn luyện'),
+    Type(3, 'Áo thủ môn'),
+    Type(4, 'Áo fan'),
+  ];
+
   final imageFiles = <File>[];
   int sizeCount = 1;
   int gender = 0;
-  String brand = 'ad';
-  String type = 'one';
 
   @override
   Widget build(BuildContext context) {
@@ -31,14 +54,57 @@ class _ProductCreateState extends State<ProductCreate> {
         surfaceTintColor: Colors.transparent,
         backgroundColor: colorBackground,
         leading: IconButton(onPressed: () => Navigator.of(context).pop(), icon: const Icon(Icons.arrow_back_rounded)),
-        actions: [IconButton(onPressed: () {}, icon: const Icon(Icons.check, color: Colors.white))],
+        actions: [
+          IconButton(
+              onPressed: () async {
+                final request = http.MultipartRequest('POST', Uri.parse('http://10.0.2.2:8080/api/products'));
+
+                request.files.add(http.MultipartFile.fromString(
+                  'product',
+                  jsonEncode(
+                    {
+                      'nameProduct': nameController.text,
+                      'starReview': 0,
+                      'idStatusProduct': 1,
+                      'listedPrice': listedPriceController.text,
+                      'promotionalPrice': promPriceController.text,
+                      'brand': {
+                        'id': brands.firstWhere((brand) => brand.isSelected, orElse: () => brands.first).id,
+                      },
+                      'typeProduct': {
+                        'id': types.firstWhere((type) => type.isSelected, orElse: () => types.first).id,
+                      },
+                      'idSex': gender,
+                      'timeCreated': DateFormat('yyyy-MM-dd\'T\'HH:mm:ss').format(DateTime.now()),
+                      'imageProducts': [],
+                      'comments': [],
+                    },
+                  ),
+                  contentType: MediaType('application', 'json'),
+                ));
+
+                final mutipartFiles = <http.MultipartFile>[];
+                for (final file in imageFiles) {
+                  final mutipartFile = await http.MultipartFile.fromPath('images', file.path);
+                  mutipartFiles.add(mutipartFile);
+                }
+                request.files.addAll(mutipartFiles);
+
+                final response = await request.send();
+
+                if (response.statusCode == 200 && context.mounted) {
+                  Navigator.of(context).pop();
+                }
+              },
+              icon: const Icon(Icons.check, color: Colors.white))
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: defaultPadding),
-            field('Name', 'Product name'),
+            field('Name', hint: 'Product name', controller: nameController),
             const SizedBox(height: defaultPadding),
             Padding(
               padding: const EdgeInsets.all(defaultPadding),
@@ -49,13 +115,13 @@ class _ProductCreateState extends State<ProductCreate> {
                   DropdownButton<String>(
                     borderRadius: BorderRadius.circular(8.0),
                     isExpanded: true,
-                    value: brand,
-                    onChanged: (value) => setState(() => brand = value ?? 'ad'),
-                    items: const [
-                      DropdownMenuItem(value: 'ad', child: Text('Adidas')),
-                      DropdownMenuItem(value: 'pu', child: Text('Puma')),
-                      DropdownMenuItem(value: 'ni', child: Text('Nike')),
-                    ],
+                    value: brands.firstWhere((brand) => brand.isSelected, orElse: () => brands.first).id.toString(),
+                    onChanged: (value) => setState(() {
+                      for (final brand in brands) {
+                        brand.isSelected = brand.id.toString() == value;
+                      }
+                    }),
+                    items: [...brands.map((brand) => DropdownMenuItem(value: brand.id.toString(), child: Text(brand.name)))],
                   ),
                 ],
               ),
@@ -69,13 +135,13 @@ class _ProductCreateState extends State<ProductCreate> {
                   DropdownButton<String>(
                     borderRadius: BorderRadius.circular(8.0),
                     isExpanded: true,
-                    value: type,
-                    onChanged: (value) => setState(() => type = value ?? 'one'),
-                    items: const [
-                      DropdownMenuItem(value: 'one', child: Text('Type One')),
-                      DropdownMenuItem(value: 'two', child: Text('Type Two')),
-                      DropdownMenuItem(value: 'three', child: Text('Type Three')),
-                    ],
+                    value: types.firstWhere((type) => type.isSelected, orElse: () => types.first).id.toString(),
+                    onChanged: (value) => setState(() {
+                      for (final type in types) {
+                        type.isSelected = type.id.toString() == value;
+                      }
+                    }),
+                    items: [...types.map((type) => DropdownMenuItem(value: type.id.toString(), child: Text(type.name)))],
                   ),
                 ],
               ),
@@ -95,7 +161,10 @@ class _ProductCreateState extends State<ProductCreate> {
                 for (int i = 0; i < sizeCount; i++)
                   Column(
                     children: [
-                      Row(children: [Expanded(child: field('Size', 'Product size')), Expanded(child: field('Quantity', 'Product quantity'))]),
+                      Row(children: [
+                        Expanded(child: field('Size', hint: 'Product size', controller: sizeController)),
+                        Expanded(child: field('Quantity', hint: 'Product quantity', controller: quantityController))
+                      ]),
                       const SizedBox(height: defaultPadding),
                     ],
                   ),
@@ -117,9 +186,9 @@ class _ProductCreateState extends State<ProductCreate> {
               ],
             ),
             const SizedBox(height: defaultPadding),
-            field('Listed price', 'Price', 'VNĐ'),
+            field('Listed price', hint: 'Price', suffixText: 'VNĐ', controller: listedPriceController),
             const SizedBox(height: defaultPadding),
-            field('Promotion price', 'Price', 'VNĐ'),
+            field('Promotion price', hint: 'Price', suffixText: 'VNĐ', controller: promPriceController),
             const SizedBox(height: defaultPadding),
             images()
           ],
@@ -128,14 +197,17 @@ class _ProductCreateState extends State<ProductCreate> {
     );
   }
 
-  Widget field(String label, [String? hint, String? suffixText]) {
+  Widget field(String label, {String? hint, String? suffixText, required TextEditingController controller}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: defaultPadding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(label),
-          TextField(decoration: InputDecoration(filled: false, hintText: hint, suffixText: suffixText)),
+          TextField(
+            decoration: InputDecoration(filled: false, hintText: hint, suffixText: suffixText),
+            controller: controller,
+          ),
         ],
       ),
     );
