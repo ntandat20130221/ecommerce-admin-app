@@ -74,7 +74,7 @@ class _ProductScreenState extends State<ProductScreen> {
                   itemBuilder: (context, index) {
                     final product = products[index];
                     return InkWell(
-                      onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => const ProductCreate(isEdit: true))),
+                      onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => ProductCreate(product: product))),
                       child: Row(
                         children: [
                           Padding(
@@ -93,7 +93,7 @@ class _ProductScreenState extends State<ProductScreen> {
                             children: [
                               Text(product.name, style: const TextStyle(fontSize: 16)),
                               const SizedBox(height: 2.0),
-                              Text('Quantity: ${product.sizes.map((e) => e.quantity).reduce((value, element) => value + element)}'),
+                              Text('Total Quantity: ${product.sizes.map((e) => e.quantity).reduce((value, element) => value + element)}'),
                               const SizedBox(height: 2.0),
                               Text('Created at: ${DateFormat('yyyy-MM-dd HH:mm:ss').format(product.timeCreated)}'),
                             ],

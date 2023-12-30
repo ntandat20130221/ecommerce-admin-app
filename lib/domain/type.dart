@@ -1,9 +1,8 @@
 class Type {
-  Type({required this.id, required this.name, this.isSelected = false});
+  Type({required this.id, required this.name});
 
   int id;
   String name;
-  bool isSelected;
 
   factory Type.fromJson(Map<String, dynamic> json) {
     return Type(

@@ -9,15 +9,19 @@ import 'package:http_parser/http_parser.dart';
 class ProductRepositoryImpl implements ProductRepository {
   @override
   Future<List<Product>> getProducts() async {
-    final response = await http.get(Uri.parse('$baseUrl/api/admin/products'));
-    final products = <Product>[];
-    if (response.statusCode == 200) {
-      final productJsons = jsonDecode(utf8.decode(response.bodyBytes));
-      for (final productJson in productJsons) {
-        products.add(Product.fromJson(productJson));
+    try {
+      final products = <Product>[];
+      final response = await http.get(Uri.parse('$baseUrl/api/admin/products'));
+      if (response.statusCode == 200) {
+        final productJsons = jsonDecode(utf8.decode(response.bodyBytes));
+        for (final productJson in productJsons) {
+          products.add(Product.fromJson(productJson));
+        }
       }
+      return products;
+    } catch (_) {
+      return [];
     }
-    return products;
   }
 
   @override
