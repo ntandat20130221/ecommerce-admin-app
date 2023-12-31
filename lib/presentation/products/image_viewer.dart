@@ -1,11 +1,12 @@
 import 'dart:io';
 
+import 'package:ecommerce_admin_app/domain/image_path.dart';
 import 'package:flutter/material.dart';
 
 class ImageViewer extends StatelessWidget {
-  const ImageViewer(this.imageFile, {super.key});
+  const ImageViewer(this.imagePath, {super.key});
 
-  final File imageFile;
+  final ImagePath imagePath;
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +19,7 @@ class ImageViewer extends StatelessWidget {
       ),
       body: Container(
         decoration: const BoxDecoration(color: Colors.black),
-        child: Center(child: Image.file(imageFile)),
+        child: Center(child: imagePath.from == From.local ? Image.file(File(imagePath.path)) : Image.network(imagePath.path)),
       ),
     );
   }

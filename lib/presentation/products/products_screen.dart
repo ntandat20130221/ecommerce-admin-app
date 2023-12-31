@@ -1,4 +1,3 @@
-import 'package:ecommerce_admin_app/data/constants.dart';
 import 'package:ecommerce_admin_app/data/repositories/product_repository_impl.dart';
 import 'package:ecommerce_admin_app/domain/product.dart';
 import 'package:ecommerce_admin_app/presentation/products/product_create.dart';
@@ -83,7 +82,7 @@ class _ProductScreenState extends State<ProductScreen> {
                               borderRadius: BorderRadius.circular(6.0),
                               child: SizedBox.fromSize(
                                 size: const Size.fromRadius(32),
-                                child: Image.network('$baseUrl/api/product/${product.images[0]}'),
+                                child: Image.network(product.imagePaths[0].path),
                               ),
                             ),
                           ),
