@@ -101,7 +101,7 @@ class _ProductScreenState extends State<ProductScreen> {
                       ),
                     );
                   },
-                  separatorBuilder: (context, index) => const Divider(height: 0, color: Color.fromARGB(255, 54, 58, 80)),
+                  separatorBuilder: (context, index) => const Divider(height: 0, color: Color.fromARGB(255, 41, 43, 59)),
                 ),
               ],
             ),

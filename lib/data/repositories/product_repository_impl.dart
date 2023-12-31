@@ -67,4 +67,10 @@ class ProductRepositoryImpl implements ProductRepository {
     final response = await request.send();
     return response.statusCode == 200;
   }
+
+  @override
+  Future<bool> deleteProduct(Product product) async {
+    final response = await http.delete(Uri.parse('$baseUrl/api/product/${product.id}'));
+    return response.statusCode == 200;
+  }
 }

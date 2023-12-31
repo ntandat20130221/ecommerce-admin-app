@@ -155,13 +155,13 @@ class _ProductCreateState extends State<ProductCreate> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: colorBackground,
       appBar: AppBar(
         title: Text(isEdit ? 'Edit Product' : 'Create Product'),
         centerTitle: true,
         automaticallyImplyLeading: false,
         surfaceTintColor: Colors.transparent,
-        backgroundColor: backgroundColor,
+        backgroundColor: colorBackground,
         leading: IconButton(onPressed: () => Navigator.of(context).pop(), icon: const Icon(Icons.arrow_back_rounded)),
         actions: [IconButton(onPressed: () => onSave(), icon: const Icon(Icons.check, color: Colors.white))],
       ),
@@ -222,7 +222,8 @@ class _ProductCreateState extends State<ProductCreate> {
                       ],
                     ),
                   ),
-                  sectionImages()
+                  sectionImages(),
+                  isEdit ? deleteButton() : const SizedBox.shrink(),
                 ],
               ),
             ),
@@ -316,6 +317,31 @@ class _ProductCreateState extends State<ProductCreate> {
       ),
     );
   }
+
+  Widget deleteButton() => Column(
+        children: [
+          const SizedBox(height: defaultPadding),
+          Center(
+            child: InkWell(
+              borderRadius: BorderRadius.circular(6),
+              onTap: () => productRepository.deleteProduct(widget.product!),
+              child: Ink(
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 48),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF21262D),
+                  border: Border.all(color: const Color(0xFF363B42), width: 1.5),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: const Text(
+                  'Delete this product',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.red),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: defaultPadding * 2)
+        ],
+      );
 
   Widget sectionInventory() => section(
         'Inventory',
@@ -446,7 +472,7 @@ class _ProductCreateState extends State<ProductCreate> {
             Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: defaultPadding),
             Container(
-              decoration: BoxDecoration(color: containerColor, borderRadius: BorderRadius.circular(defaultPadding / 2)),
+              decoration: BoxDecoration(color: colorSecondary, borderRadius: BorderRadius.circular(defaultPadding / 2)),
               child: Padding(padding: const EdgeInsets.all(defaultPadding), child: child),
             )
           ],
