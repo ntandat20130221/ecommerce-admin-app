@@ -4,6 +4,7 @@ import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:ecommerce_admin_app/data/repositories/product_repository.dart';
 import 'package:ecommerce_admin_app/data/repositories/product_repository_impl.dart';
 import 'package:ecommerce_admin_app/domain/brand.dart';
+import 'package:ecommerce_admin_app/domain/image_path.dart';
 import 'package:ecommerce_admin_app/domain/product.dart';
 import 'package:ecommerce_admin_app/domain/size.dart';
 import 'package:ecommerce_admin_app/domain/type.dart';
@@ -11,11 +12,9 @@ import 'package:ecommerce_admin_app/presentation/products/image_viewer.dart';
 import 'package:ecommerce_admin_app/shared/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:logger/logger.dart';
 
 class DropdownModel {
   DropdownModel({required this.id, required this.name, this.isSelected = false});
-
   int id;
   String name;
   bool isSelected;
@@ -23,7 +22,6 @@ class DropdownModel {
 
 class InventoryModel {
   InventoryModel({required this.sizes, required this.quantityController});
-
   List<DropdownModel> sizes;
   TextEditingController quantityController;
 }
@@ -75,16 +73,17 @@ class _ProductCreateState extends State<ProductCreate> {
     ),
   ];
 
-  final imagePaths = <String>[];
+  final imagePaths = <ImagePath>[];
 
   bool get isEdit => widget.product != null;
+  bool isLoading = false;
 
-  void createProduct() async {
+  void onSave() async {
     final gender = genders.where((element) => element.isSelected).firstOrNull;
     final brandModel = brands.firstWhere((brand) => brand.isSelected, orElse: () => brands.first);
     final typeModel = types.firstWhere((type) => type.isSelected, orElse: () => types.first);
     final product = Product(
-      id: 0,
+      id: widget.product?.id ?? 0,
       name: nameController.text,
       gender: gender == null ? false : gender.id == 1,
       star: 0,
@@ -95,91 +94,139 @@ class _ProductCreateState extends State<ProductCreate> {
       sizes: inventories
           .map((e) => Size(name: e.sizes.firstWhere((element) => element.isSelected).name, quantity: int.parse(e.quantityController.text)))
           .toList(),
-      images: imagePaths,
+      imagePaths: imagePaths,
       timeCreated: DateTime.now(),
     );
 
-    final isSuccessful = await productRepository.createProduct(product);
+    final isSuccessful = isEdit ? await productRepository.updateProduct(product) : await productRepository.createProduct(product);
     if (isSuccessful && context.mounted) {
       Navigator.of(context).pop();
     }
   }
 
-  void updateProduct() async {}
+  void populateData() async {
+    setState(() => isLoading = true);
+    final product = widget.product;
+    if (isEdit && product != null) {
+      nameController.text = product.name;
+      listedPriceController.text = product.listedPrice.toString();
+      promPriceController.text = product.price.toString();
+      for (final element in brands) {
+        element.isSelected = element.id == product.brand.id;
+        if (element.isSelected) break;
+      }
+      for (final element in types) {
+        element.isSelected = element.id == product.type.id;
+        if (element.isSelected) break;
+      }
+      genders[product.gender ? 0 : 1].isSelected = true;
+      for (int i = 1; i < product.sizes.length; i++) {
+        inventories.add(
+          InventoryModel(
+            sizes: [
+              DropdownModel(id: 1, name: 'S'),
+              DropdownModel(id: 2, name: 'M'),
+              DropdownModel(id: 3, name: 'L'),
+              DropdownModel(id: 4, name: 'XL'),
+              DropdownModel(id: 5, name: 'XXL'),
+            ],
+            quantityController: TextEditingController(),
+          ),
+        );
+      }
+      for (final (index, element) in inventories.indexed) {
+        for (final size in element.sizes) {
+          size.isSelected = product.sizes[index].name == size.name;
+          if (size.isSelected) break;
+        }
+        element.quantityController.text = product.sizes[index].quantity.toString();
+      }
+      imagePaths.addAll([...product.imagePaths]);
+    }
+    setState(() => isLoading = false);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    populateData();
+  }
 
   @override
   Widget build(BuildContext context) {
-    Logger().d('REBUILD');
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: colorBackground,
       appBar: AppBar(
         title: Text(isEdit ? 'Edit Product' : 'Create Product'),
         centerTitle: true,
         automaticallyImplyLeading: false,
         surfaceTintColor: Colors.transparent,
-        backgroundColor: backgroundColor,
+        backgroundColor: colorBackground,
         leading: IconButton(onPressed: () => Navigator.of(context).pop(), icon: const Icon(Icons.arrow_back_rounded)),
-        actions: [IconButton(onPressed: () => isEdit ? updateProduct() : createProduct(), icon: const Icon(Icons.check, color: Colors.white))],
+        actions: [IconButton(onPressed: () => onSave(), icon: const Icon(Icons.check, color: Colors.white))],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: defaultPadding),
-            section(
-              'Discription',
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Product Name', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: defaultPadding / 2 + 4),
-                  textField(controller: nameController),
                   const SizedBox(height: defaultPadding),
-                  const Text('Business Description', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: defaultPadding / 2 + 4),
-                  textField(minLines: 5),
+                  section(
+                    'Discription',
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Product Name', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                        const SizedBox(height: defaultPadding / 2 + 4),
+                        textField(controller: nameController),
+                        const SizedBox(height: defaultPadding),
+                        const Text('Business Description', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                        const SizedBox(height: defaultPadding / 2 + 4),
+                        textField(minLines: 5),
+                      ],
+                    ),
+                  ),
+                  section(
+                    'Category',
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Product Brand', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                        const SizedBox(height: defaultPadding / 2 + 4),
+                        dropdownButton(brands),
+                        const SizedBox(height: defaultPadding),
+                        const Text('Product Type', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                        const SizedBox(height: defaultPadding / 2 + 4),
+                        dropdownButton(types),
+                        const SizedBox(height: defaultPadding),
+                        const Text('Gender', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                        const SizedBox(height: defaultPadding / 2 + 4),
+                        dropdownButton(genders),
+                      ],
+                    ),
+                  ),
+                  sectionInventory(),
+                  section(
+                    'Pricing',
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Listed Price', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                        const SizedBox(height: defaultPadding / 2 + 4),
+                        textField(controller: listedPriceController, leadingText: 'VND'),
+                        const SizedBox(height: defaultPadding),
+                        const Text('Promotional Price', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                        const SizedBox(height: defaultPadding / 2 + 4),
+                        textField(controller: promPriceController, leadingText: 'VND'),
+                      ],
+                    ),
+                  ),
+                  sectionImages(),
+                  isEdit ? deleteButton() : const SizedBox.shrink(),
                 ],
               ),
             ),
-            section(
-              'Category',
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Product Brand', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: defaultPadding / 2 + 4),
-                  dropdownButton(brands),
-                  const SizedBox(height: defaultPadding),
-                  const Text('Product Type', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: defaultPadding / 2 + 4),
-                  dropdownButton(types),
-                  const SizedBox(height: defaultPadding),
-                  const Text('Gender', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: defaultPadding / 2 + 4),
-                  dropdownButton(genders),
-                ],
-              ),
-            ),
-            sectionInventory(),
-            section(
-              'Pricing',
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Listed Price', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: defaultPadding / 2 + 4),
-                  textField(controller: listedPriceController, leadingText: 'VND'),
-                  const SizedBox(height: defaultPadding),
-                  const Text('Promotional Price', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: defaultPadding / 2 + 4),
-                  textField(controller: promPriceController, leadingText: 'VND'),
-                ],
-              ),
-            ),
-            sectionImages()
-          ],
-        ),
-      ),
     );
   }
 
@@ -271,6 +318,31 @@ class _ProductCreateState extends State<ProductCreate> {
     );
   }
 
+  Widget deleteButton() => Column(
+        children: [
+          const SizedBox(height: defaultPadding),
+          Center(
+            child: InkWell(
+              borderRadius: BorderRadius.circular(6),
+              onTap: () => productRepository.deleteProduct(widget.product!),
+              child: Ink(
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 48),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF21262D),
+                  border: Border.all(color: const Color(0xFF363B42), width: 1.5),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: const Text(
+                  'Delete this product',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.red),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: defaultPadding * 2)
+        ],
+      );
+
   Widget sectionInventory() => section(
         'Inventory',
         child: Column(
@@ -348,21 +420,17 @@ class _ProductCreateState extends State<ProductCreate> {
                 alignment: AlignmentDirectional.topEnd,
                 children: [
                   GestureDetector(
-                    onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => ImageViewer(File(imagePath)))),
+                    onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => ImageViewer(imagePath))),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(6.0),
-                      child: Image.file(File(imagePath)),
+                      child: imagePath.from == From.local ? Image.file(File(imagePath.path)) : Image.network(imagePath.path),
                     ),
                   ),
                   Container(
                     margin: const EdgeInsets.only(top: defaultPadding / 4, right: defaultPadding / 4),
                     child: IconButton(
                       style: ButtonStyle(backgroundColor: MaterialStateProperty.all<Color>(const Color.fromARGB(129, 37, 37, 37))),
-                      onPressed: () {
-                        setState(() {
-                          imagePaths.remove(imagePath);
-                        });
-                      },
+                      onPressed: () => setState(() => imagePaths.remove(imagePath)),
                       icon: const Icon(Icons.close, color: Colors.white),
                     ),
                   )
@@ -380,7 +448,11 @@ class _ProductCreateState extends State<ProductCreate> {
               final imagePicker = ImagePicker();
               imagePicker.pickMultiImage().then((xFiles) {
                 final paths = xFiles.map((e) => e.path);
-                setState(() => imagePaths.addAll(paths));
+                setState(() {
+                  for (final path in paths) {
+                    imagePaths.add(ImagePath(path: path, from: From.local));
+                  }
+                });
               });
             },
             style: ElevatedButton.styleFrom(backgroundColor: colorSecondary),
@@ -400,7 +472,7 @@ class _ProductCreateState extends State<ProductCreate> {
             Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: defaultPadding),
             Container(
-              decoration: BoxDecoration(color: containerColor, borderRadius: BorderRadius.circular(defaultPadding / 2)),
+              decoration: BoxDecoration(color: colorSecondary, borderRadius: BorderRadius.circular(defaultPadding / 2)),
               child: Padding(padding: const EdgeInsets.all(defaultPadding), child: child),
             )
           ],
