@@ -22,34 +22,46 @@ class _StatsState extends State<Stats> {
       itemCount: 4,
       mainAxisSpacing: defaultPadding,
       crossAxisSpacing: defaultPadding,
-      itemBuilder: (context, index) => Container(
-        decoration: BoxDecoration(
-          color: colorSecondary,
-          borderRadius: BorderRadius.circular(defaultPadding / 2),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(defaultPadding),
-          child: Row(
-            children: [
-              SvgPicture.asset(
-                widget.models[index].icon!,
-                height: 32,
-                colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
-              ),
-              const SizedBox(width: defaultPadding),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(widget.models[index].title!, style: const TextStyle(fontSize: 12)),
-                  const SizedBox(height: 4),
-                  Text(widget.models[index].value!, style: const TextStyle(fontWeight: FontWeight.bold)),
-                ],
-              )
-            ],
+      itemBuilder: (context, index) {
+        final model = widget.models[index];
+        return Container(
+          decoration: BoxDecoration(
+            color: colorSecondary,
+            borderRadius: BorderRadius.circular(defaultPadding / 2),
           ),
-        ),
-      ),
+          child: Padding(
+            padding: const EdgeInsets.all(defaultPadding),
+            child: Row(
+              children: [
+                SvgPicture.asset(
+                  model.icon!,
+                  height: 32,
+                  width: 32,
+                  colorFilter: ColorFilter.mode(
+                      model.title == 'Revenue'
+                          ? Colors.amber.shade400
+                          : model.title == 'Products'
+                              ? Colors.red.shade400
+                              : model.title == 'Orders'
+                                  ? Colors.green.shade400
+                                  : Colors.blue.shade400,
+                      BlendMode.srcIn),
+                ),
+                const SizedBox(width: defaultPadding),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(model.title!, style: const TextStyle(fontSize: 12, color: Color.fromARGB(255, 231, 231, 231))),
+                    const SizedBox(height: 4),
+                    Text(model.value!, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  ],
+                )
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

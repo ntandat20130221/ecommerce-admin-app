@@ -513,10 +513,10 @@ packages:
     dependency: "direct main"
     description:
       name: syncfusion_flutter_charts
-      sha256: "12ed32b889bd4a28cf44b9fa246510e8f2fc798023018a6a915cbd0bffec1517"
+      sha256: d720751869540bc0b18e063414e9c8d41c924cca01e3aad3538d404c31d00e2d
       url: "https://pub.dev"
     source: hosted
-    version: "24.1.43"
+    version: "24.1.43+1"
   syncfusion_flutter_core:
     dependency: transitive
     description:

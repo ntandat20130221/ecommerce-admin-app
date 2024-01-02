@@ -13,10 +13,10 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   final statistics = [
-    Statistic(title: 'Revenue', value: '593434M', icon: 'assets/icons/ic_dashboard.svg'),
-    Statistic(title: 'Products', value: '7234324', icon: 'assets/icons/ic_dashboard.svg'),
-    Statistic(title: 'Orders', value: '234415', icon: 'assets/icons/ic_dashboard.svg'),
-    Statistic(title: 'Customers', value: '25452', icon: 'assets/icons/ic_dashboard.svg'),
+    Statistic(title: 'Revenue', value: '593434M', icon: 'assets/icons/ic_dollar.svg'),
+    Statistic(title: 'Products', value: '7234324', icon: 'assets/icons/ic_products.svg'),
+    Statistic(title: 'Orders', value: '234415', icon: 'assets/icons/ic_orders.svg'),
+    Statistic(title: 'Customers', value: '25452', icon: 'assets/icons/ic_users.svg'),
   ];
   final isLoading = false;
 

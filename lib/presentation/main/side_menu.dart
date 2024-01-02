@@ -18,7 +18,10 @@ class SideMenu extends StatelessWidget {
           color: Colors.transparent,
           child: ListView(
             children: [
-              DrawerHeader(child: Image.asset('assets/images/logo.png')),
+              DrawerHeader(
+                decoration: const BoxDecoration(border: Border(bottom: BorderSide(width: 0))),
+                child: Image.asset('assets/images/logo.png'),
+              ),
               DrawerListTiles(menus, onMenuTap: onMenuTap),
             ],
           ),
@@ -39,13 +42,22 @@ class DrawerListTiles extends StatelessWidget {
     return Column(
       children: [
         for (final menu in menus)
-          InkWell(
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 3.0, horizontal: 10),
             child: Container(
-              color: menu.isSelected ? colorSecondary : null,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(6.0),
+                color: menu.isSelected ? colorSecondary : null,
+              ),
               child: ListTile(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6.0)),
                 onTap: () => onMenuTap(menu),
-                leading: SvgPicture.asset(menu.icon!, colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn), height: 20),
-                title: Text(menu.title!, style: const TextStyle(color: Color.fromARGB(255, 218, 218, 218))),
+                leading: SvgPicture.asset(
+                  menu.icon!,
+                  colorFilter: ColorFilter.mode(menu.isSelected ? colorPrimary : const Color.fromARGB(255, 221, 221, 221), BlendMode.srcIn),
+                  height: 20,
+                ),
+                title: Text(menu.title!, style: TextStyle(color: menu.isSelected ? colorPrimary : const Color.fromARGB(255, 221, 221, 221))),
               ),
             ),
           )
