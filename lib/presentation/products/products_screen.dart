@@ -59,7 +59,10 @@ class _ProductScreenState extends State<ProductScreen> {
                           padding: const EdgeInsets.only(right: defaultPadding),
                           child: ElevatedButton.icon(
                             style: ElevatedButton.styleFrom(backgroundColor: colorSecondary),
-                            onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => const ProductCreate())),
+                            onPressed: () async {
+                              await Navigator.of(context).push(MaterialPageRoute(builder: (context) => const ProductCreate()));
+                              loadProducts();
+                            },
                             icon: const Icon(Icons.add),
                             label: const Text('Create'),
                           ),
@@ -73,7 +76,10 @@ class _ProductScreenState extends State<ProductScreen> {
                   itemBuilder: (context, index) {
                     final product = products[index];
                     return InkWell(
-                      onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => ProductCreate(product: product))),
+                      onTap: () async {
+                        await Navigator.of(context).push(MaterialPageRoute(builder: (context) => ProductCreate(product: product)));
+                        loadProducts();
+                      },
                       child: Padding(
                         padding: const EdgeInsets.all(defaultPadding),
                         child: Row(
@@ -99,8 +105,10 @@ class _ProductScreenState extends State<ProductScreen> {
                                 Row(
                                   children: [
                                     TextButton.icon(
-                                      onPressed: () =>
-                                          Navigator.of(context).push(MaterialPageRoute(builder: (context) => ProductCreate(product: product))),
+                                      onPressed: () async {
+                                        await Navigator.of(context).push(MaterialPageRoute(builder: (context) => ProductCreate(product: product)));
+                                        loadProducts();
+                                      },
                                       style: TextButton.styleFrom(
                                           fixedSize: const Size(110, 20),
                                           foregroundColor: Colors.white,
@@ -120,6 +128,7 @@ class _ProductScreenState extends State<ProductScreen> {
                                           onYes: () async {
                                             final isSuccessful = await productRepository.deleteProduct(product);
                                             if (isSuccessful && context.mounted) Navigator.of(context).pop();
+                                            loadProducts();
                                           },
                                         );
                                       },

@@ -2,6 +2,13 @@ import 'package:ecommerce_admin_app/domain/order.dart';
 import 'package:ecommerce_admin_app/shared/constants.dart';
 import 'package:flutter/material.dart';
 
+final orderStatusMap = {
+  1: 'Packaging',
+  2: 'Shipping',
+  3: 'Diliverd',
+  4: 'Canceled',
+};
+
 class OrderInfo extends StatelessWidget {
   const OrderInfo(this.order, {super.key});
 
@@ -25,7 +32,7 @@ class OrderInfo extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(flex: 4, child: Text('Order ID', style: TextStyle(color: Colors.green.shade500))),
-                  const Expanded(flex: 6, child: Text('#1')),
+                  Expanded(flex: 6, child: Text('#${order.orderId}')),
                 ],
               ),
               const SizedBox(height: defaultPadding / 2),
@@ -33,7 +40,7 @@ class OrderInfo extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(flex: 4, child: Text('Order Date', style: TextStyle(color: Colors.green.shade500))),
-                  const Expanded(flex: 6, child: Text('23/12/2023')),
+                  Expanded(flex: 6, child: Text('${order.orderDate}')),
                 ],
               ),
               const SizedBox(height: defaultPadding / 2),
@@ -41,7 +48,7 @@ class OrderInfo extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(flex: 4, child: Text('Status', style: TextStyle(color: Colors.green.shade500))),
-                  const Expanded(flex: 6, child: Text('Dilivered')),
+                  Expanded(flex: 6, child: Text('${orderStatusMap[order.statusId]}')),
                 ],
               ),
               const SizedBox(height: defaultPadding / 2),
@@ -49,7 +56,7 @@ class OrderInfo extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(flex: 4, child: Text('Total Price', style: TextStyle(color: Colors.green.shade500))),
-                  const Expanded(flex: 6, child: Text('12008 VNĐ')),
+                  Expanded(flex: 6, child: Text('${order.totalPrice} VNĐ')),
                 ],
               ),
               const SizedBox(height: defaultPadding / 2),
@@ -57,7 +64,7 @@ class OrderInfo extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(flex: 4, child: Text('Address', style: TextStyle(color: Colors.green.shade500))),
-                  const Expanded(flex: 6, child: Text('23 Quang Trung Street, District 1, Ho Chi Minh City')),
+                  Expanded(flex: 6, child: Text('${order.shippingAddress}')),
                 ],
               ),
             ],
