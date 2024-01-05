@@ -23,65 +23,37 @@ class OrderItem extends StatelessWidget {
             padding: const EdgeInsets.all(defaultPadding),
             child: Column(
               children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Image.asset('assets/images/sample_product.jpeg', height: 72),
-                    const SizedBox(width: defaultPadding),
-                    Expanded(
-                      child: Column(
+                for (final (index, orderItem) in order.orderItems!.indexed)
+                  Column(
+                    children: [
+                      Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Manchester United Jersey'),
-                          const SizedBox(height: defaultPadding / 2),
-                          const Text('X3'),
-                          const SizedBox(height: defaultPadding / 2),
-                          Text('109.000 VNĐ', style: TextStyle(color: Colors.red.shade500)),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(6),
+                            child: SizedBox.fromSize(
+                              size: const Size.fromRadius(38),
+                              child: Image.network(orderItem.product!.imagePaths[0].path, fit: BoxFit.cover),
+                            ),
+                          ),
+                          const SizedBox(width: defaultPadding),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(orderItem.product!.name),
+                                const SizedBox(height: defaultPadding / 2),
+                                Text('X${orderItem.quantity}'),
+                                const SizedBox(height: defaultPadding / 2),
+                                Text('${orderItem.totalPrice} VNĐ', style: TextStyle(color: Colors.red.shade500)),
+                              ],
+                            ),
+                          )
                         ],
                       ),
-                    )
-                  ],
-                ),
-                const SizedBox(height: defaultPadding),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Image.asset('assets/images/sample_product.jpeg', height: 72),
-                    const SizedBox(width: defaultPadding),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Manchester United Jersey'),
-                          const SizedBox(height: defaultPadding / 2),
-                          const Text('X3'),
-                          const SizedBox(height: defaultPadding / 2),
-                          Text('109.000 VNĐ', style: TextStyle(color: Colors.red.shade500)),
-                        ],
-                      ),
-                    )
-                  ],
-                ),
-                const SizedBox(height: defaultPadding),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Image.asset('assets/images/sample_product.jpeg', height: 72),
-                    const SizedBox(width: defaultPadding),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Manchester United Jersey'),
-                          const SizedBox(height: defaultPadding / 2),
-                          const Text('X3'),
-                          const SizedBox(height: defaultPadding / 2),
-                          Text('109.000 VNĐ', style: TextStyle(color: Colors.red.shade500)),
-                        ],
-                      ),
-                    )
-                  ],
-                ),
+                      index < order.orderItems!.length - 1 ? const SizedBox(height: defaultPadding) : const SizedBox.shrink()
+                    ],
+                  )
               ],
             ),
           )

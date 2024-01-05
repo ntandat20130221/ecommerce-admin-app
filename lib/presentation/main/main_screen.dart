@@ -21,9 +21,9 @@ class _MainScreenState extends State<MainScreen> {
 
   final menus = <Menu>[
     Menu('Dashboard', 'assets/icons/ic_dashboard.svg', isSelected: true),
-    Menu('Products', 'assets/icons/ic_product.svg'),
-    Menu('Orders', 'assets/icons/ic_order.svg'),
-    Menu('Sign out', 'assets/icons/ic_log_out.svg'),
+    Menu('Products', 'assets/icons/ic_products.svg'),
+    Menu('Orders', 'assets/icons/ic_orders.svg'),
+    Menu('Sign out', 'assets/icons/ic_sign_out.svg'),
   ];
 
   Widget? currentFragment = const DashboardScreen();

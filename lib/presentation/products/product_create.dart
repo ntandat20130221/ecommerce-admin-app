@@ -6,9 +6,10 @@ import 'package:ecommerce_admin_app/data/repositories/product_repository_impl.da
 import 'package:ecommerce_admin_app/domain/brand.dart';
 import 'package:ecommerce_admin_app/domain/image_path.dart';
 import 'package:ecommerce_admin_app/domain/product.dart';
-import 'package:ecommerce_admin_app/domain/size.dart';
+import 'package:ecommerce_admin_app/domain/size.dart' as size;
 import 'package:ecommerce_admin_app/domain/type.dart';
 import 'package:ecommerce_admin_app/presentation/products/image_viewer.dart';
+import 'package:ecommerce_admin_app/presentation/products/products_screen.dart';
 import 'package:ecommerce_admin_app/shared/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -92,7 +93,7 @@ class _ProductCreateState extends State<ProductCreate> {
       listedPrice: double.parse(listedPriceController.text),
       price: double.parse(promPriceController.text),
       sizes: inventories
-          .map((e) => Size(name: e.sizes.firstWhere((element) => element.isSelected).name, quantity: int.parse(e.quantityController.text)))
+          .map((e) => size.Size(name: e.sizes.firstWhere((element) => element.isSelected).name, quantity: int.parse(e.quantityController.text)))
           .toList(),
       imagePaths: imagePaths,
       timeCreated: DateTime.now(),
@@ -324,7 +325,18 @@ class _ProductCreateState extends State<ProductCreate> {
           Center(
             child: InkWell(
               borderRadius: BorderRadius.circular(6),
-              onTap: () => productRepository.deleteProduct(widget.product!),
+              onTap: () {
+                showDeleteDialog(
+                  context: context,
+                  onYes: () async {
+                    final isSuccessful = await productRepository.deleteProduct(widget.product!);
+                    if (isSuccessful && context.mounted) {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pop();
+                    }
+                  },
+                );
+              },
               child: Ink(
                 padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 48),
                 decoration: BoxDecoration(
@@ -429,7 +441,7 @@ class _ProductCreateState extends State<ProductCreate> {
                   Container(
                     margin: const EdgeInsets.only(top: defaultPadding / 4, right: defaultPadding / 4),
                     child: IconButton(
-                      style: ButtonStyle(backgroundColor: MaterialStateProperty.all<Color>(const Color.fromARGB(129, 37, 37, 37))),
+                      style: IconButton.styleFrom(backgroundColor: const Color.fromARGB(129, 37, 37, 37)),
                       onPressed: () => setState(() => imagePaths.remove(imagePath)),
                       icon: const Icon(Icons.close, color: Colors.white),
                     ),

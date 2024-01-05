@@ -1,6 +1,7 @@
 import 'package:ecommerce_admin_app/domain/order.dart';
 
-abstract class OrdeRepository {
+abstract class OrderRepository {
   Future<List<Order>> getOrders();
-  Future<void> updateOrderStatus(String orderId, String status);
+  Future<bool> updateOrderStatus(int orderId, int status);
+  Future<Map<String, double>> getLast12Revenue();
 }
