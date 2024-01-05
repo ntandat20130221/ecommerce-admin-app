@@ -27,8 +27,17 @@ class OrderRepositoryImpl implements OrderRepository {
   Future<bool> updateOrderStatus(int orderId, int status) async {
     final response = await http.patch(
       Uri.parse('$baseUrl/api/admin/order/update-status/$orderId'),
-      body: status,
+      body: status.toString(),
     );
     return response.statusCode == 200;
+  }
+
+  @override
+  Future<Map<String, double>> getLast12Revenue() async {
+    final response = await http.get(Uri.parse('$baseUrl/api/admin/last-12-revenue'));
+    if (response.statusCode == 200) {
+      return Map<String, double>.from(jsonDecode(response.body));
+    }
+    return {};
   }
 }

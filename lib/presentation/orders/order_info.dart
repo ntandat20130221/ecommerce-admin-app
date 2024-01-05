@@ -35,7 +35,15 @@ class OrderInfo extends StatelessWidget {
                   Expanded(flex: 6, child: Text('#${order.orderId}')),
                 ],
               ),
-              const SizedBox(height: defaultPadding / 2),
+              const SizedBox(height: defaultPadding / 2 + 4),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(flex: 4, child: Text('User ID', style: TextStyle(color: Colors.green.shade500))),
+                  Expanded(flex: 6, child: Text('#${order.user!.userId}')),
+                ],
+              ),
+              const SizedBox(height: defaultPadding / 2 + 4),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -43,15 +51,32 @@ class OrderInfo extends StatelessWidget {
                   Expanded(flex: 6, child: Text('${order.orderDate}')),
                 ],
               ),
-              const SizedBox(height: defaultPadding / 2),
+              const SizedBox(height: defaultPadding / 2 + 4),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(flex: 4, child: Text('Status', style: TextStyle(color: Colors.green.shade500))),
-                  Expanded(flex: 6, child: Text('${orderStatusMap[order.statusId]}')),
+                  Expanded(
+                    flex: 6,
+                    child: UnconstrainedBox(
+                      alignment: Alignment.topLeft,
+                      child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 8),
+                          decoration: BoxDecoration(
+                              color: order.statusId == 1
+                                  ? Colors.amber.shade400
+                                  : order.statusId == 2
+                                      ? Colors.blue.shade400
+                                      : order.statusId == 3
+                                          ? Colors.green.shade400
+                                          : Colors.red.shade400,
+                              borderRadius: BorderRadius.circular(4.0)),
+                          child: Text('${orderStatusMap[order.statusId]}')),
+                    ),
+                  ),
                 ],
               ),
-              const SizedBox(height: defaultPadding / 2),
+              const SizedBox(height: defaultPadding / 2 + 4),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -59,7 +84,7 @@ class OrderInfo extends StatelessWidget {
                   Expanded(flex: 6, child: Text('${order.totalPrice} VNĐ')),
                 ],
               ),
-              const SizedBox(height: defaultPadding / 2),
+              const SizedBox(height: defaultPadding / 2 + 4),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

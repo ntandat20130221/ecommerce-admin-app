@@ -19,7 +19,7 @@ class _StatsState extends State<Stats> {
     return MasonryGridView.count(
       shrinkWrap: true,
       crossAxisCount: 2,
-      itemCount: 4,
+      itemCount: widget.models.length,
       mainAxisSpacing: defaultPadding,
       crossAxisSpacing: defaultPadding,
       itemBuilder: (context, index) {

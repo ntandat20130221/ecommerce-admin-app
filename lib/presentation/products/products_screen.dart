@@ -18,6 +18,7 @@ class _ProductScreenState extends State<ProductScreen> {
   var isLoading = true;
 
   void loadProducts() {
+    setState(() => isLoading = true);
     productRepository.getProducts().then((value) {
       setState(() {
         products = value;
@@ -37,12 +38,8 @@ class _ProductScreenState extends State<ProductScreen> {
     return isLoading
         ? const Center(child: CircularProgressIndicator())
         : RefreshIndicator(
-            onRefresh: () async {
-              loadProducts();
-            },
-            notificationPredicate: (ScrollNotification notification) {
-              return notification.depth == 0;
-            },
+            onRefresh: (() async => loadProducts()),
+            notificationPredicate: (ScrollNotification notification) => notification.depth == 0,
             child: CustomScrollView(
               slivers: [
                 SliverAppBar(
@@ -133,13 +130,14 @@ class _ProductScreenState extends State<ProductScreen> {
                                         );
                                       },
                                       style: TextButton.styleFrom(
-                                          fixedSize: const Size(110, 20),
-                                          foregroundColor: Colors.red.shade300,
-                                          backgroundColor: colorSecondary,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(4.0),
-                                            side: const BorderSide(color: Color.fromARGB(255, 90, 90, 90), width: 0.4),
-                                          )),
+                                        fixedSize: const Size(110, 20),
+                                        foregroundColor: Colors.red.shade300,
+                                        backgroundColor: colorSecondary,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(4.0),
+                                          side: const BorderSide(color: Color.fromARGB(255, 90, 90, 90), width: 0.4),
+                                        ),
+                                      ),
                                       icon: const Icon(Icons.delete),
                                       label: const Text('Delete'),
                                     ),
