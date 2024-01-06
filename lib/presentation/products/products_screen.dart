@@ -20,7 +20,7 @@ class _ProductScreenState extends State<ProductScreen> {
   late List<Product> products;
   bool isLoading = true;
   bool isLoadingMore = false;
-  int page = 0, size = 10;
+  int page = 0, size = 15;
 
   void firstLoadProducts() async {
     setState(() => isLoading = true);
@@ -38,7 +38,7 @@ class _ProductScreenState extends State<ProductScreen> {
 
   void navigateToProductCreateScreen([Product? product]) async {
     await Navigator.of(context).push(MaterialPageRoute(builder: (context) => ProductCreate(product: product)));
-    // firstLoadProducts();
+    firstLoadProducts();
   }
 
   @override
@@ -94,78 +94,87 @@ class _ProductScreenState extends State<ProductScreen> {
                         itemCount: products.length,
                         itemBuilder: (context, index) {
                           final product = products[index];
-                          return InkWell(
-                            onTap: () => navigateToProductCreateScreen(product),
-                            child: Padding(
-                              padding: const EdgeInsets.all(defaultPadding),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(6.0),
-                                    child: SizedBox.fromSize(
-                                      size: const Size.fromRadius(32),
-                                      child: product.imagePaths.isNotEmpty
-                                          ? Image.network(product.imagePaths.first)
-                                          : Image.asset('assets/images/sample_product.jpeg'),
-                                    ),
-                                  ),
-                                  const SizedBox(width: defaultPadding),
-                                  Column(
+                          return Column(
+                            children: [
+                              InkWell(
+                                onTap: () => navigateToProductCreateScreen(product),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(defaultPadding),
+                                  child: Row(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text(product.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                                      const SizedBox(height: 2.0),
-                                      Text('Total Quantity: ${product.sizes.map((e) => e.quantity).reduce((value, element) => value + element)}'),
-                                      const SizedBox(height: 2.0),
-                                      Text('Last update: ${DateFormat('yyyy-MM-dd HH:mm:ss').format(product.timeCreated)}'),
-                                      const SizedBox(height: defaultPadding / 2),
-                                      Row(
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(6.0),
+                                        child: SizedBox.fromSize(
+                                          size: const Size.fromRadius(32),
+                                          child: product.imagePaths.isNotEmpty
+                                              ? Image.network(product.imagePaths.first)
+                                              : Image.asset('assets/images/sample_product.jpeg'),
+                                        ),
+                                      ),
+                                      const SizedBox(width: defaultPadding),
+                                      Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          TextButton.icon(
-                                            onPressed: () => navigateToProductCreateScreen(product),
-                                            style: TextButton.styleFrom(
-                                                fixedSize: const Size(110, 20),
-                                                foregroundColor: Colors.white,
-                                                backgroundColor: colorSecondary,
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius: BorderRadius.circular(4.0),
-                                                  side: const BorderSide(color: Color.fromARGB(255, 90, 90, 90), width: 0.4),
-                                                )),
-                                            icon: const Icon(Icons.edit),
-                                            label: const Text('Edit'),
-                                          ),
-                                          const SizedBox(width: defaultPadding / 2 + 4),
-                                          TextButton.icon(
-                                            onPressed: () {
-                                              showDeleteDialog(
-                                                context: context,
-                                                onYes: () async {
-                                                  final isSuccessful = await productRepository.deleteProduct(product);
-                                                  if (isSuccessful && context.mounted) Navigator.of(context).pop();
-                                                  firstLoadProducts();
-                                                },
-                                              );
-                                            },
-                                            style: TextButton.styleFrom(
-                                              fixedSize: const Size(110, 20),
-                                              foregroundColor: Colors.red.shade300,
-                                              backgroundColor: colorSecondary,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(4.0),
-                                                side: const BorderSide(color: Color.fromARGB(255, 90, 90, 90), width: 0.4),
+                                          Text(product.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                                          const SizedBox(height: 2.0),
+                                          Text('Total Quantity: ${product.sizes.map((e) => e.quantity).reduce((value, element) => value + element)}'),
+                                          const SizedBox(height: 2.0),
+                                          Text('Last update: ${DateFormat('yyyy-MM-dd HH:mm:ss').format(product.timeCreated)}'),
+                                          const SizedBox(height: defaultPadding / 2),
+                                          Row(
+                                            children: [
+                                              TextButton.icon(
+                                                onPressed: () => navigateToProductCreateScreen(product),
+                                                style: TextButton.styleFrom(
+                                                    fixedSize: const Size(110, 20),
+                                                    foregroundColor: Colors.white,
+                                                    backgroundColor: colorSecondary,
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius: BorderRadius.circular(4.0),
+                                                      side: const BorderSide(color: Color.fromARGB(255, 90, 90, 90), width: 0.4),
+                                                    )),
+                                                icon: const Icon(Icons.edit),
+                                                label: const Text('Edit'),
                                               ),
-                                            ),
-                                            icon: const Icon(Icons.delete),
-                                            label: const Text('Delete'),
-                                          ),
+                                              const SizedBox(width: defaultPadding / 2 + 4),
+                                              TextButton.icon(
+                                                onPressed: () {
+                                                  showDeleteDialog(
+                                                    context: context,
+                                                    onYes: () async {
+                                                      final isSuccessful = await productRepository.deleteProduct(product);
+                                                      if (isSuccessful && context.mounted) Navigator.of(context).pop();
+                                                      firstLoadProducts();
+                                                    },
+                                                  );
+                                                },
+                                                style: TextButton.styleFrom(
+                                                  fixedSize: const Size(110, 20),
+                                                  foregroundColor: Colors.red.shade300,
+                                                  backgroundColor: colorSecondary,
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius: BorderRadius.circular(4.0),
+                                                    side: const BorderSide(color: Color.fromARGB(255, 90, 90, 90), width: 0.4),
+                                                  ),
+                                                ),
+                                                icon: const Icon(Icons.delete),
+                                                label: const Text('Delete'),
+                                              ),
+                                            ],
+                                          )
                                         ],
                                       )
                                     ],
-                                  )
-                                ],
+                                  ),
+                                ),
                               ),
-                            ),
+                              if (isLoadingMore && index >= products.length - 1)
+                                const Padding(
+                                  padding: EdgeInsets.only(top: defaultPadding, bottom: defaultPadding * 2),
+                                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3.5),
+                                )
+                            ],
                           );
                         },
                         separatorBuilder: (context, index) => const Divider(height: 0, color: Color.fromARGB(255, 41, 43, 59)),
@@ -173,13 +182,6 @@ class _ProductScreenState extends State<ProductScreen> {
                     ],
                   ),
                 ),
-                if (isLoadingMore)
-                  const Padding(
-                    padding: EdgeInsets.only(top: 10, bottom: 40),
-                    child: Center(
-                      child: CircularProgressIndicator(),
-                    ),
-                  ),
               ],
             ),
           );
