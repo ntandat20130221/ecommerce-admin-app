@@ -79,8 +79,10 @@ class _ProductCreateState extends State<ProductCreate> {
 
   bool get isEdit => widget.product != null;
   bool isLoading = true;
+  bool isSaving = false;
 
   void onSave() async {
+    setState(() => isSaving = true);
     final genderModel = genders.firstWhere((gender) => gender.isSelected, orElse: () => genders.first);
     final brandModel = brands.firstWhere((brand) => brand.isSelected, orElse: () => brands.first);
     final typeModel = types.firstWhere((type) => type.isSelected, orElse: () => types.first);
@@ -104,6 +106,7 @@ class _ProductCreateState extends State<ProductCreate> {
     if (isSuccessful && context.mounted) {
       Navigator.of(context).pop();
     }
+    setState(() => isSaving = false);
   }
 
   void populateData() async {
@@ -167,7 +170,18 @@ class _ProductCreateState extends State<ProductCreate> {
         surfaceTintColor: Colors.transparent,
         backgroundColor: colorBackground,
         leading: IconButton(onPressed: () => Navigator.of(context).pop(), icon: const Icon(Icons.arrow_back_rounded)),
-        actions: [IconButton(onPressed: () => onSave(), icon: const Icon(Icons.check, color: Colors.white))],
+        actions: [
+          isSaving
+              ? const SizedBox(
+                  height: 48,
+                  width: 48,
+                  child: Padding(
+                    padding: EdgeInsets.all(12),
+                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                  ),
+                )
+              : IconButton(onPressed: () => onSave(), icon: const Icon(Icons.check, color: Colors.white)),
+        ],
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
