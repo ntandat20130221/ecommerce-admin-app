@@ -14,23 +14,44 @@ class ProductScreen extends StatefulWidget {
 
 class _ProductScreenState extends State<ProductScreen> {
   final productRepository = ProductRepositoryImpl();
-  late List<Product> products;
-  var isLoading = true;
 
-  void loadProducts() {
+  late ScrollController scrollController;
+
+  late List<Product> products;
+  bool isLoading = true;
+  bool isLoadingMore = false;
+  int page = 0, size = 10;
+
+  void firstLoadProducts() async {
     setState(() => isLoading = true);
-    productRepository.getProducts().then((value) {
-      setState(() {
-        products = value;
-        isLoading = false;
-      });
-    });
+    products = await productRepository.getProducts(page = 0, size);
+    setState(() => isLoading = false);
+  }
+
+  void loadMore() async {
+    if (isLoading == false && isLoadingMore == false && scrollController.position.extentAfter < 300) {
+      setState(() => isLoadingMore = true);
+      products.addAll(await productRepository.getProducts(++page, size));
+      setState(() => isLoadingMore = false);
+    }
+  }
+
+  void navigateToProductCreateScreen([Product? product]) async {
+    await Navigator.of(context).push(MaterialPageRoute(builder: (context) => ProductCreate(product: product)));
+    // firstLoadProducts();
   }
 
   @override
   void initState() {
     super.initState();
-    loadProducts();
+    firstLoadProducts();
+    scrollController = ScrollController()..addListener(loadMore);
+  }
+
+  @override
+  void dispose() {
+    scrollController.removeListener(loadMore);
+    super.dispose();
   }
 
   @override
@@ -38,120 +59,127 @@ class _ProductScreenState extends State<ProductScreen> {
     return isLoading
         ? const Center(child: CircularProgressIndicator())
         : RefreshIndicator(
-            onRefresh: (() async => loadProducts()),
+            onRefresh: (() async => firstLoadProducts()),
             notificationPredicate: (ScrollNotification notification) => notification.depth == 0,
-            child: CustomScrollView(
-              slivers: [
-                SliverAppBar(
-                  backgroundColor: colorBackground,
-                  surfaceTintColor: Colors.transparent,
-                  leading: null,
-                  automaticallyImplyLeading: false,
-                  floating: true,
-                  actions: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(right: defaultPadding),
-                          child: ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(backgroundColor: colorSecondary),
-                            onPressed: () async {
-                              await Navigator.of(context).push(MaterialPageRoute(builder: (context) => const ProductCreate()));
-                              loadProducts();
-                            },
-                            icon: const Icon(Icons.add),
-                            label: const Text('Create'),
-                          ),
-                        ),
-                      ],
-                    )
-                  ],
-                ),
-                SliverList.separated(
-                  itemCount: products.length,
-                  itemBuilder: (context, index) {
-                    final product = products[index];
-                    return InkWell(
-                      onTap: () async {
-                        await Navigator.of(context).push(MaterialPageRoute(builder: (context) => ProductCreate(product: product)));
-                        loadProducts();
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.all(defaultPadding),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(6.0),
-                              child: SizedBox.fromSize(
-                                size: const Size.fromRadius(32),
-                                child: Image.network(product.imagePaths[0].path),
+            child: Column(
+              children: [
+                Expanded(
+                  child: CustomScrollView(
+                    controller: scrollController,
+                    slivers: [
+                      SliverAppBar(
+                        backgroundColor: colorBackground,
+                        surfaceTintColor: Colors.transparent,
+                        leading: null,
+                        automaticallyImplyLeading: false,
+                        floating: true,
+                        actions: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.only(right: defaultPadding),
+                                child: ElevatedButton.icon(
+                                  style: ElevatedButton.styleFrom(backgroundColor: colorSecondary),
+                                  onPressed: () => navigateToProductCreateScreen(),
+                                  icon: const Icon(Icons.add),
+                                  label: const Text('Create'),
+                                ),
+                              ),
+                            ],
+                          )
+                        ],
+                      ),
+                      SliverList.separated(
+                        itemCount: products.length,
+                        itemBuilder: (context, index) {
+                          final product = products[index];
+                          return InkWell(
+                            onTap: () => navigateToProductCreateScreen(product),
+                            child: Padding(
+                              padding: const EdgeInsets.all(defaultPadding),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(6.0),
+                                    child: SizedBox.fromSize(
+                                      size: const Size.fromRadius(32),
+                                      child: product.imagePaths.isNotEmpty
+                                          ? Image.network(product.imagePaths.first)
+                                          : Image.asset('assets/images/sample_product.jpeg'),
+                                    ),
+                                  ),
+                                  const SizedBox(width: defaultPadding),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(product.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                                      const SizedBox(height: 2.0),
+                                      Text('Total Quantity: ${product.sizes.map((e) => e.quantity).reduce((value, element) => value + element)}'),
+                                      const SizedBox(height: 2.0),
+                                      Text('Last update: ${DateFormat('yyyy-MM-dd HH:mm:ss').format(product.timeCreated)}'),
+                                      const SizedBox(height: defaultPadding / 2),
+                                      Row(
+                                        children: [
+                                          TextButton.icon(
+                                            onPressed: () => navigateToProductCreateScreen(product),
+                                            style: TextButton.styleFrom(
+                                                fixedSize: const Size(110, 20),
+                                                foregroundColor: Colors.white,
+                                                backgroundColor: colorSecondary,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius: BorderRadius.circular(4.0),
+                                                  side: const BorderSide(color: Color.fromARGB(255, 90, 90, 90), width: 0.4),
+                                                )),
+                                            icon: const Icon(Icons.edit),
+                                            label: const Text('Edit'),
+                                          ),
+                                          const SizedBox(width: defaultPadding / 2 + 4),
+                                          TextButton.icon(
+                                            onPressed: () {
+                                              showDeleteDialog(
+                                                context: context,
+                                                onYes: () async {
+                                                  final isSuccessful = await productRepository.deleteProduct(product);
+                                                  if (isSuccessful && context.mounted) Navigator.of(context).pop();
+                                                  firstLoadProducts();
+                                                },
+                                              );
+                                            },
+                                            style: TextButton.styleFrom(
+                                              fixedSize: const Size(110, 20),
+                                              foregroundColor: Colors.red.shade300,
+                                              backgroundColor: colorSecondary,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(4.0),
+                                                side: const BorderSide(color: Color.fromARGB(255, 90, 90, 90), width: 0.4),
+                                              ),
+                                            ),
+                                            icon: const Icon(Icons.delete),
+                                            label: const Text('Delete'),
+                                          ),
+                                        ],
+                                      )
+                                    ],
+                                  )
+                                ],
                               ),
                             ),
-                            const SizedBox(width: defaultPadding),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(product.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                                const SizedBox(height: 2.0),
-                                Text('Total Quantity: ${product.sizes.map((e) => e.quantity).reduce((value, element) => value + element)}'),
-                                const SizedBox(height: 2.0),
-                                Text('Last update: ${DateFormat('yyyy-MM-dd HH:mm:ss').format(product.timeCreated)}'),
-                                const SizedBox(height: defaultPadding / 2),
-                                Row(
-                                  children: [
-                                    TextButton.icon(
-                                      onPressed: () async {
-                                        await Navigator.of(context).push(MaterialPageRoute(builder: (context) => ProductCreate(product: product)));
-                                        loadProducts();
-                                      },
-                                      style: TextButton.styleFrom(
-                                          fixedSize: const Size(110, 20),
-                                          foregroundColor: Colors.white,
-                                          backgroundColor: colorSecondary,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(4.0),
-                                            side: const BorderSide(color: Color.fromARGB(255, 90, 90, 90), width: 0.4),
-                                          )),
-                                      icon: const Icon(Icons.edit),
-                                      label: const Text('Edit'),
-                                    ),
-                                    const SizedBox(width: defaultPadding / 2 + 4),
-                                    TextButton.icon(
-                                      onPressed: () {
-                                        showDeleteDialog(
-                                          context: context,
-                                          onYes: () async {
-                                            final isSuccessful = await productRepository.deleteProduct(product);
-                                            if (isSuccessful && context.mounted) Navigator.of(context).pop();
-                                            loadProducts();
-                                          },
-                                        );
-                                      },
-                                      style: TextButton.styleFrom(
-                                        fixedSize: const Size(110, 20),
-                                        foregroundColor: Colors.red.shade300,
-                                        backgroundColor: colorSecondary,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(4.0),
-                                          side: const BorderSide(color: Color.fromARGB(255, 90, 90, 90), width: 0.4),
-                                        ),
-                                      ),
-                                      icon: const Icon(Icons.delete),
-                                      label: const Text('Delete'),
-                                    ),
-                                  ],
-                                )
-                              ],
-                            )
-                          ],
-                        ),
+                          );
+                        },
+                        separatorBuilder: (context, index) => const Divider(height: 0, color: Color.fromARGB(255, 41, 43, 59)),
                       ),
-                    );
-                  },
-                  separatorBuilder: (context, index) => const Divider(height: 0, color: Color.fromARGB(255, 41, 43, 59)),
+                    ],
+                  ),
                 ),
+                if (isLoadingMore)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 10, bottom: 40),
+                    child: Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  ),
               ],
             ),
           );

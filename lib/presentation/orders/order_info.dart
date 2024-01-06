@@ -39,8 +39,8 @@ class OrderInfo extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(flex: 4, child: Text('User ID', style: TextStyle(color: Colors.green.shade500))),
-                  Expanded(flex: 6, child: Text('#${order.user!.userId}')),
+                  Expanded(flex: 4, child: Text('User Phone', style: TextStyle(color: Colors.green.shade500))),
+                  Expanded(flex: 6, child: Text('${order.toPhone}')),
                 ],
               ),
               const SizedBox(height: defaultPadding / 2 + 4),

@@ -1,24 +1,18 @@
-import 'dart:convert';
-
 import 'package:ecommerce_admin_app/data/constants.dart';
 import 'package:ecommerce_admin_app/data/repositories/user_repository.dart';
-import 'package:ecommerce_admin_app/domain/user.dart';
 import 'package:http/http.dart' as http;
 
 class UserRepositoryImpl implements UserRepository {
   @override
-  Future<List<User>> getUsers() async {
+  Future<int> getUsersAmount() async {
     try {
-      final users = <User>[];
-      final response = await http.get(Uri.parse('$baseUrl/api/admin/users'));
+      final response = await http.get(Uri.parse('$baseUrl/api/admin/users-amount'));
       if (response.statusCode == 200) {
-        for (final userJson in jsonDecode(utf8.decode(response.bodyBytes))) {
-          users.add(User.fromJson(userJson));
-        }
+        return int.parse(response.body);
       }
-      return users;
+      return 0;
     } catch (_) {
-      return [];
+      return 0;
     }
   }
 }

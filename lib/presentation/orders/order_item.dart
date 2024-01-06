@@ -33,7 +33,7 @@ class OrderItem extends StatelessWidget {
                             borderRadius: BorderRadius.circular(6),
                             child: SizedBox.fromSize(
                               size: const Size.fromRadius(38),
-                              child: Image.network(orderItem.product!.imagePaths[0].path, fit: BoxFit.cover),
+                              child: Image.network(orderItem.product!.imagePaths.first, fit: BoxFit.cover),
                             ),
                           ),
                           const SizedBox(width: defaultPadding),
