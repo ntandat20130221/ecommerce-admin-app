@@ -4,7 +4,6 @@ import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:ecommerce_admin_app/data/repositories/product_repository.dart';
 import 'package:ecommerce_admin_app/data/repositories/product_repository_impl.dart';
 import 'package:ecommerce_admin_app/domain/brand.dart';
-import 'package:ecommerce_admin_app/domain/image_path.dart';
 import 'package:ecommerce_admin_app/domain/product.dart';
 import 'package:ecommerce_admin_app/domain/size.dart' as size;
 import 'package:ecommerce_admin_app/domain/type.dart';
@@ -57,36 +56,38 @@ class _ProductCreateState extends State<ProductCreate> {
   ];
 
   final genders = [
-    DropdownModel(id: 1, name: 'Male'),
-    DropdownModel(id: 2, name: 'Female'),
+    DropdownModel(id: 0, name: 'Male'),
+    DropdownModel(id: 1, name: 'Female'),
   ];
 
   final inventories = [
     InventoryModel(
       sizes: [
-        DropdownModel(id: 1, name: 'S'),
+        DropdownModel(id: 1, name: 'L'),
         DropdownModel(id: 2, name: 'M'),
-        DropdownModel(id: 3, name: 'L'),
+        DropdownModel(id: 3, name: 'S'),
         DropdownModel(id: 4, name: 'XL'),
-        DropdownModel(id: 5, name: 'XXL'),
+        DropdownModel(id: 5, name: 'XS'),
+        DropdownModel(id: 6, name: 'XXL'),
+        DropdownModel(id: 7, name: 'XXXL'),
       ],
       quantityController: TextEditingController(),
     ),
   ];
 
-  final imagePaths = <ImagePath>[];
+  final images = <dynamic>[];
 
   bool get isEdit => widget.product != null;
-  bool isLoading = false;
+  bool isLoading = true;
 
   void onSave() async {
-    final gender = genders.where((element) => element.isSelected).firstOrNull;
+    final genderModel = genders.firstWhere((gender) => gender.isSelected, orElse: () => genders.first);
     final brandModel = brands.firstWhere((brand) => brand.isSelected, orElse: () => brands.first);
     final typeModel = types.firstWhere((type) => type.isSelected, orElse: () => types.first);
     final product = Product(
-      id: widget.product?.id ?? 0,
+      id: widget.product?.id,
       name: nameController.text,
-      gender: gender == null ? false : gender.id == 1,
+      gender: genderModel.id,
       star: 0,
       brand: Brand(id: brandModel.id, name: brandModel.name),
       type: Type(id: typeModel.id, name: typeModel.name),
@@ -95,11 +96,11 @@ class _ProductCreateState extends State<ProductCreate> {
       sizes: inventories
           .map((e) => size.Size(name: e.sizes.firstWhere((element) => element.isSelected).name, quantity: int.parse(e.quantityController.text)))
           .toList(),
-      imagePaths: imagePaths,
+      imagePaths: [],
       timeCreated: DateTime.now(),
     );
 
-    final isSuccessful = isEdit ? await productRepository.updateProduct(product) : await productRepository.createProduct(product);
+    final isSuccessful = isEdit ? await productRepository.updateProduct(product, images) : await productRepository.createProduct(product, images);
     if (isSuccessful && context.mounted) {
       Navigator.of(context).pop();
     }
@@ -120,16 +121,18 @@ class _ProductCreateState extends State<ProductCreate> {
         element.isSelected = element.id == product.type.id;
         if (element.isSelected) break;
       }
-      genders[product.gender ? 0 : 1].isSelected = true;
+      genders[product.gender].isSelected = true;
       for (int i = 1; i < product.sizes.length; i++) {
         inventories.add(
           InventoryModel(
             sizes: [
-              DropdownModel(id: 1, name: 'S'),
+              DropdownModel(id: 1, name: 'L'),
               DropdownModel(id: 2, name: 'M'),
-              DropdownModel(id: 3, name: 'L'),
+              DropdownModel(id: 3, name: 'S'),
               DropdownModel(id: 4, name: 'XL'),
-              DropdownModel(id: 5, name: 'XXL'),
+              DropdownModel(id: 5, name: 'XS'),
+              DropdownModel(id: 6, name: 'XXL'),
+              DropdownModel(id: 7, name: 'XXXL'),
             ],
             quantityController: TextEditingController(),
           ),
@@ -142,7 +145,7 @@ class _ProductCreateState extends State<ProductCreate> {
         }
         element.quantityController.text = product.sizes[index].quantity.toString();
       }
-      imagePaths.addAll([...product.imagePaths]);
+      images.addAll(product.imagePaths);
     }
     setState(() => isLoading = false);
   }
@@ -386,11 +389,13 @@ class _ProductCreateState extends State<ProductCreate> {
                                   inventories.add(
                                     InventoryModel(
                                       sizes: [
-                                        DropdownModel(id: 1, name: 'S'),
+                                        DropdownModel(id: 1, name: 'L'),
                                         DropdownModel(id: 2, name: 'M'),
-                                        DropdownModel(id: 3, name: 'L'),
+                                        DropdownModel(id: 3, name: 'S'),
                                         DropdownModel(id: 4, name: 'XL'),
-                                        DropdownModel(id: 5, name: 'XXL'),
+                                        DropdownModel(id: 5, name: 'XS'),
+                                        DropdownModel(id: 6, name: 'XXL'),
+                                        DropdownModel(id: 7, name: 'XXXL'),
                                       ],
                                       quantityController: TextEditingController(),
                                     ),
@@ -420,29 +425,29 @@ class _ProductCreateState extends State<ProductCreate> {
           padding: EdgeInsets.symmetric(horizontal: defaultPadding),
           child: Row(children: [Text('Images', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))]),
         ),
-        SizedBox(height: imagePaths.isEmpty ? 0 : defaultPadding),
+        SizedBox(height: images.isEmpty ? 0 : defaultPadding),
         SizedBox(
-          height: imagePaths.isEmpty ? 0 : 100,
+          height: images.isEmpty ? 0 : 100,
           child: ListView.separated(
             padding: const EdgeInsets.symmetric(horizontal: defaultPadding),
             scrollDirection: Axis.horizontal,
             itemBuilder: (context, index) {
-              final imagePath = imagePaths[index];
+              final dynamic image = images[index];
               return Stack(
                 alignment: AlignmentDirectional.topEnd,
                 children: [
                   GestureDetector(
-                    onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => ImageViewer(imagePath))),
+                    onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => ImageViewer(image))),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(6.0),
-                      child: imagePath.from == From.local ? Image.file(File(imagePath.path)) : Image.network(imagePath.path),
+                      child: image is String ? Image.network(image) : Image.file(image),
                     ),
                   ),
                   Container(
                     margin: const EdgeInsets.only(top: defaultPadding / 4, right: defaultPadding / 4),
                     child: IconButton(
                       style: IconButton.styleFrom(backgroundColor: const Color.fromARGB(129, 37, 37, 37)),
-                      onPressed: () => setState(() => imagePaths.remove(imagePath)),
+                      onPressed: () => setState(() => images.remove(image)),
                       icon: const Icon(Icons.close, color: Colors.white),
                     ),
                   )
@@ -450,22 +455,15 @@ class _ProductCreateState extends State<ProductCreate> {
               );
             },
             separatorBuilder: (context, index) => const SizedBox(width: defaultPadding),
-            itemCount: imagePaths.length,
+            itemCount: images.length,
           ),
         ),
         Padding(
           padding: const EdgeInsets.symmetric(vertical: defaultPadding),
           child: ElevatedButton.icon(
-            onPressed: () {
-              final imagePicker = ImagePicker();
-              imagePicker.pickMultiImage().then((xFiles) {
-                final paths = xFiles.map((e) => e.path);
-                setState(() {
-                  for (final path in paths) {
-                    imagePaths.add(ImagePath(path: path, from: From.local));
-                  }
-                });
-              });
+            onPressed: () async {
+              final xFiles = await ImagePicker().pickMultiImage();
+              setState(() => images.addAll(xFiles.map((e) => File(e.path))));
             },
             style: ElevatedButton.styleFrom(backgroundColor: colorSecondary),
             icon: const Icon(Icons.upload),

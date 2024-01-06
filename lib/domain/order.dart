@@ -1,11 +1,10 @@
 import 'package:ecommerce_admin_app/domain/order_item.dart';
-import 'package:ecommerce_admin_app/domain/user.dart';
 
 class Order {
-  Order({this.orderId, this.user, this.totalPrice, this.orderDate, this.statusId, this.shippingAddress, this.orderItems});
+  Order({this.orderId, this.toPhone, this.totalPrice, this.orderDate, this.statusId, this.shippingAddress, this.orderItems});
 
   int? orderId;
-  User? user;
+  String? toPhone;
   double? totalPrice;
   DateTime? orderDate;
   int? statusId;
@@ -14,7 +13,7 @@ class Order {
 
   Order.fromJson(Map<String, dynamic> json)
       : orderId = json['id'],
-        user = User.fromJson(json['user']),
+        toPhone = json['toPhone'],
         totalPrice = json['totalPrice'],
         orderDate = DateTime.parse(json['orderDate']),
         statusId = json['statusId'],

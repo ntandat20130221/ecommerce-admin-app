@@ -4,10 +4,8 @@ import 'package:ecommerce_admin_app/data/repositories/product_repository.dart';
 import 'package:ecommerce_admin_app/data/repositories/product_repository_impl.dart';
 import 'package:ecommerce_admin_app/data/repositories/user_repository.dart';
 import 'package:ecommerce_admin_app/data/repositories/user_repository_impl.dart';
-import 'package:ecommerce_admin_app/domain/order.dart';
-import 'package:ecommerce_admin_app/domain/product.dart';
+import 'package:ecommerce_admin_app/domain/order_status_statistic.dart';
 import 'package:ecommerce_admin_app/domain/statistic.dart';
-import 'package:ecommerce_admin_app/domain/user.dart';
 import 'package:ecommerce_admin_app/presentation/dashboard/orders_pie_chart.dart';
 import 'package:ecommerce_admin_app/presentation/dashboard/revenue_spark_bar.dart';
 import 'package:ecommerce_admin_app/presentation/dashboard/stats.dart';
@@ -26,52 +24,47 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final ProductRepository productRepository = ProductRepositoryImpl();
   final OrderRepository orderRepository = OrderRepositoryImpl();
 
-  late List<Order> orders;
-  late List<Product> products;
-  late List<User> users;
-
   final statistics = <Statistic>[];
+  final List<OrderStatusStatistic> orderStatusStatistics = [];
   final Map<String, double> revenueData = {};
   var isLoading = true;
 
   void loadData() async {
     setState(() => isLoading = true);
-    final responses = await Future.wait([
-      orderRepository.getOrders(),
-      productRepository.getProducts(),
-      userRepository.getUsers(),
+    final statictisResponses = await Future.wait([
+      orderRepository.getTotalRevenue(),
+      orderRepository.getOrdersAmount(),
+      productRepository.getProductsAmount(),
+      userRepository.getUsersAmount(),
     ]);
 
-    orders = List<Order>.from(responses[0]);
-    products = List<Product>.from(responses[1]);
-    users = List<User>.from(responses[2]);
-
-    // Load revenue data.
+    final orderStatusStatistics = await orderRepository.getOrderStatusStatistics();
     final revenueData = await orderRepository.getLast12Revenue();
 
     setState(() {
       statistics.addAll([
         Statistic(
           title: 'Revenue',
-          value: '${orders.fold(0, (value, element) => element.totalPrice!.toInt() + value)}M',
+          value: '${statictisResponses[0]}M',
           icon: 'assets/icons/ic_dollar.svg',
         ),
         Statistic(
-          title: 'Products',
-          value: '${products.length}',
-          icon: 'assets/icons/ic_products.svg',
-        ),
-        Statistic(
           title: 'Orders',
-          value: '${orders.length}',
+          value: '${statictisResponses[1]}',
           icon: 'assets/icons/ic_orders.svg',
         ),
         Statistic(
+          title: 'Products',
+          value: '${statictisResponses[2]}',
+          icon: 'assets/icons/ic_products.svg',
+        ),
+        Statistic(
           title: 'Customers',
-          value: '${users.length}',
+          value: '${statictisResponses[3]}',
           icon: 'assets/icons/ic_users.svg',
         ),
       ]);
+      this.orderStatusStatistics.addAll(orderStatusStatistics);
       this.revenueData.addAll(revenueData);
       isLoading = false;
     });
@@ -95,7 +88,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 children: [
                   Stats(models: statistics),
                   const SizedBox(height: defaultPadding),
-                  OrdersPieChart(orders),
+                  OrdersPieChart(orderStatusStatistics),
                   const SizedBox(height: defaultPadding),
                   RevenueSparkBar(data: revenueData),
                 ],

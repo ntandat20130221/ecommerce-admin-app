@@ -1,6 +1,4 @@
-import 'package:ecommerce_admin_app/data/constants.dart';
 import 'package:ecommerce_admin_app/domain/brand.dart';
-import 'package:ecommerce_admin_app/domain/image_path.dart';
 import 'package:ecommerce_admin_app/domain/size.dart';
 import 'package:ecommerce_admin_app/domain/type.dart';
 
@@ -19,15 +17,15 @@ class Product {
     required this.timeCreated,
   });
 
-  int id;
+  int? id;
   String name;
-  bool gender;
+  int gender;
   int star;
   Brand brand;
   Type type;
   double listedPrice, price;
   List<Size> sizes;
-  List<ImagePath> imagePaths;
+  List<String> imagePaths;
   DateTime timeCreated;
 
   Product.fromJson(Map<String, dynamic> json)
@@ -40,7 +38,7 @@ class Product {
         listedPrice = json['listedPrice'],
         price = json['price'],
         sizes = List<Size>.from(json['sizes'].map((sizeJson) => Size.fromJson(sizeJson))),
-        imagePaths = (json['images'] as List).map((e) => ImagePath(path: '$baseUrl/api/product/$e', from: From.network)).toList(),
+        imagePaths = List<String>.from(json['images']),
         timeCreated = DateTime.parse(json['timeCreated']);
 
   Map<String, dynamic> toJson() => {
