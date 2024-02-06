@@ -12,7 +12,7 @@ class OrderItem {
     return switch (json) {
       {
         'product': Map<String, dynamic> productJson,
-        'size': String size,
+        'size': String? size, // Avoid the case where the server fails to return size = null
         'quantity': int quantity,
         'totalPrice': double totalPrice,
       } =>

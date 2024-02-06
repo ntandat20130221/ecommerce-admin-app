@@ -21,7 +21,6 @@ class RevenueSparkBar extends StatelessWidget {
           const Text('Revenue Statistic', style: TextStyle(fontSize: 17.5, color: Colors.white)),
           const SizedBox(height: defaultPadding),
           SfSparkBarChart(
-            labelDisplayMode: SparkChartLabelDisplayMode.all,
             axisLineColor: const Color.fromARGB(255, 166, 186, 250),
             trackball: SparkChartTrackball(
                 backgroundColor: Colors.red,
